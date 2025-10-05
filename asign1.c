@@ -40,68 +40,124 @@ Test Cases:
 
 
 
-#include<stdio.h>
-#include<ctype.h>
-#include <string.h>
-int main(){
-    char str[1000];
-    printf("enter the string of expression using only +,-,*,/ operators:\n");
-    fgets(str, sizeof(str), stdin);
-    str[strcspn(str, "\n")] = 0; 
+#include <stdio.h>
+#include <ctype.h>
 
-    int p=strlen(str);
-    int curr=0;
-    int last = 0;
-    
-    char sign = '+';
-    int result = 0;
-    for (int i = 0; i < p;i++){ 
-        char chr = str[i];
-        if(isdigit(chr)){
-            curr = curr * 10 + chr - '0';
+#define MAX_EXPR 1000
+
+
+int strLength(char str[]) {
+    int len = 0;
+    while (str[len] != '\0') len++;
+    return len;
+}
+
+// Remove newline if present
+void trimNewline(char str[]) {
+    int i = 0;
+    while (str[i] != '\0') {
+        if (str[i] == '\n') {
+            str[i] = '\0';
+            break;
         }
-        if((!isdigit(chr) && chr != ' ') || i == p- 1){
-            if(chr !='+'  && chr!='-' && chr!='*' && chr!='/'&& !isdigit(chr) && !isspace(chr)){
-                printf("Error: Invalid expression.\n");
-                return 0;
-            
-            
-                
-            }
-            if (i == p - 1 && !isdigit(chr)) {
-                printf("Error: Invalid expression.\n");
-                return 0;
-            }
-            
-            if(sign=='+'){
-                result = result + last;
-                last = curr;
-            }
-            else if(sign=='-'){
-                result = result + last;
-                last = -curr;
-            }
-            else if(sign=='*'){
-                last = last * curr;
-            }
-            else if(sign=='/'){
-                if(curr==0){
-                    printf("Error: Division by zero.\n");
-                    return 0;
-                     
-                }
-                last = last / curr;
-            }
-            
-            sign = chr;
-            curr = 0;
-                
-            
-        }
-       
-       
+        i++;
     }
-    result=result+last;
-    printf("%d\n", result);
+}
+
+
+    return (ch == '+' || ch == '-' || ch == '*' || ch == '/');
+}
+
+
+int applyMulDiv(int a, int b, char op, int *error) {
+    if (op == '*') return a * b;
+    if (op == '/') {
+        if (b == 0) {
+            *error = 1; 
+            return 0;
+        }
+        return a / b;
+    }
+    return 0; 
+}
+
+// Evaluate full expression using stacks for DMAS
+int evaluateExpression(char expr[], int *errorFlag) {
+    int numStack[MAX_EXPR], numTop = -1;
+    char opStack[MAX_EXPR]; int opTop = -1;
+
+    int i = 0, len = strLength(expr);
+
+    while (i < len) {
+     
+        if (isspace((unsigned char)expr[i])) { i++; continue; }
+
+
+        int sign = 1;
+        if ((expr[i] == '+' || expr[i] == '-') &&
+            (i == 0 || isOperator(expr[i-1]))) {
+            if (expr[i] == '-') sign = -1;
+            i++;
+        }
+
+      
+        if (isdigit((unsigned char)expr[i])) {
+            int num = 0;
+            while (i < len && isdigit((unsigned char)expr[i])) {
+                num = num * 10 + (expr[i] - '0');
+                i++;
+            }
+            num *= sign;
+           
+            if (opTop >= 0 && (opStack[opTop] == '*' || opStack[opTop] == '/')) {
+                char op = opStack[opTop--];
+                int prev = numStack[numTop--];
+                numStack[++numTop] = applyMulDiv(prev, num, op, errorFlag);
+                if (*errorFlag) return 0;
+            } else {
+                numStack[++numTop] = num;
+            }
+        }
+       
+        else if (isOperator(expr[i])) {
+          
+            if (i == 0 || (i > 0 && isOperator(expr[i-1]))) {
+                printf("Error: Invalid expression.\n");
+                *errorFlag = 1;
+                return 0;
+            }
+            opStack[++opTop] = expr[i++];
+        }
+        else {
+            printf("Error: Invalid expression.\n");
+            *errorFlag = 1;
+            return 0;
+        }
+    }
+
+    int result = numStack[0];
+    int numIndex = 1;
+    for (int j = 0; j <= opTop; j++) {
+        char op = opStack[j];
+        int num = numStack[numIndex++];
+        if (op == '+') result += num;
+        else if (op == '-') result -= num;
+    }
+
+    return result;
+}
+
+int main() {
+    char expression[MAX_EXPR];
+    int error = 0;
+
+    printf("Enter a mathematical expression (+, -, *, /):\n");
+    fgets(expression, sizeof(expression), stdin);
+    trimNewline(expression);
+
+    int result = evaluateExpression(expression, &error);
+    if (!error) {
+        printf("Result: %d\n", result);
+    }
     return 0;
 }
