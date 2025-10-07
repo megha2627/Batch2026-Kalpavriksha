@@ -7,7 +7,7 @@ Description:
 Design a console-based calculator program in C that accepts mathematical
 expressions as input in the form of strings. The program should evaluate the
 expression and return the result. Supported operations include addition (+),
-subtraction (-), multiplication (*), and division (/). The program should handle
+subtraction (-), multiplication (*), and dsiivision (/). The program should handle
 integer operations and output the result as an integer, even if the result of
 division has a remainder.
 
@@ -42,122 +42,101 @@ Test Cases:
 
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
-#define MAX_EXPR 1000
-
-
-int strLength(char str[]) {
+int stringLength(const char* str) {
     int len = 0;
-    while (str[len] != '\0') len++;
+    while (str[len] != '\0') {
+        len++;
+    }
     return len;
 }
 
-// Remove newline if present
-void trimNewline(char str[]) {
-    int i = 0;
-    while (str[i] != '\0') {
-        if (str[i] == '\n') {
-            str[i] = '\0';
-            break;
-        }
-        i++;
-    }
-}
+int main() {
+    char stringExpression[1000];
+   
+    printf("Enter the expression using only +, -, *, / operators:\n");
+    fgets(stringExpression, sizeof(stringExpression), stdin);
+   
+    int len = stringLength(stringExpression);
+    if (len > 0 && stringExpression[len-1] == '\n')
+        stringExpression[len-1] = '\0';
+
+    int lengthOfString = stringLength(stringExpression);
+
+    int currentNumber = 0;
+    int lastNumber = 0;
+    char currentSign = '+'; 
+    int sumOfExpression = 0;
+    char prevChar = 0;
 
 
-    return (ch == '+' || ch == '-' || ch == '*' || ch == '/');
-}
-
-
-int applyMulDiv(int a, int b, char op, int *error) {
-    if (op == '*') return a * b;
-    if (op == '/') {
-        if (b == 0) {
-            *error = 1; 
+    for (int i = 0; i < lengthOfString; i++) {
+        unsigned char chr = (unsigned char)stringExpression[i]; 
+        if (i == 0 && (chr == '+' || chr == '*' || chr == '/')) {
+            printf("Error: Expression cannot start with operator.\n");
             return 0;
         }
-        return a / b;
-    }
-    return 0; 
-}
-
-// Evaluate full expression using stacks for DMAS
-int evaluateExpression(char expr[], int *errorFlag) {
-    int numStack[MAX_EXPR], numTop = -1;
-    char opStack[MAX_EXPR]; int opTop = -1;
-
-    int i = 0, len = strLength(expr);
-
-    while (i < len) {
-     
-        if (isspace((unsigned char)expr[i])) { i++; continue; }
-
-
-        int sign = 1;
-        if ((expr[i] == '+' || expr[i] == '-') &&
-            (i == 0 || isOperator(expr[i-1]))) {
-            if (expr[i] == '-') sign = -1;
-            i++;
-        }
-
-      
-        if (isdigit((unsigned char)expr[i])) {
-            int num = 0;
-            while (i < len && isdigit((unsigned char)expr[i])) {
-                num = num * 10 + (expr[i] - '0');
-                i++;
-            }
-            num *= sign;
-           
-            if (opTop >= 0 && (opStack[opTop] == '*' || opStack[opTop] == '/')) {
-                char op = opStack[opTop--];
-                int prev = numStack[numTop--];
-                numStack[++numTop] = applyMulDiv(prev, num, op, errorFlag);
-                if (*errorFlag) return 0;
-            } else {
-                numStack[++numTop] = num;
-            }
-        }
+         if (i == 0 && chr == '-'){
+            currentSign= '-';
+            continue;
+         }
        
-        else if (isOperator(expr[i])) {
-          
-            if (i == 0 || (i > 0 && isOperator(expr[i-1]))) {
+
+        if (isdigit(chr)) {
+            currentNumber = currentNumber * 10 + (chr - '0');
+        }
+
+        if ((!isdigit(chr) && chr != ' ') || i == lengthOfString - 1) {
+            if ((prevChar == '+' || prevChar == '-' || prevChar == '*' || prevChar == '/') && 
+                (chr == '+' || chr == '-' || chr == '*' || chr == '/')) {
+                printf("Error: Invalid expression (consecutive operators).\n");
+                return 0;
+            }    
+        
+
+            // Update prevChar only if current is operator
+            if (chr == '+' || chr == '-' || chr == '*' || chr == '/') {
+                prevChar = chr;
+            }
+
+
+
+            // Check invalid characters
+            if (chr != '+' && chr != '-' && chr != '*' && chr != '/' && !isdigit(chr) && !isspace(chr)) {
                 printf("Error: Invalid expression.\n");
-                *errorFlag = 1;
                 return 0;
             }
-            opStack[++opTop] = expr[i++];
+
+            // Expression cannot end with operator
+            if (i == lengthOfString - 1 && !isdigit(chr)) {
+                printf("Error: Invalid expression.\n");
+                return 0;
+            }
+
+            // Evaluate based on lastNumber and currentSign
+            if (currentSign == '+') {
+                sumOfExpression += lastNumber;
+                lastNumber = currentNumber;
+            } else if (currentSign == '-') {
+                sumOfExpression += lastNumber;
+                lastNumber = -currentNumber;
+            } else if (currentSign == '*') {
+                lastNumber = lastNumber * currentNumber;
+            } else if (currentSign == '/') {
+                if (currentNumber == 0) {
+                    printf("Error: Division by zero.\n");
+                    return 0;
+                }
+                lastNumber = lastNumber / currentNumber;
+            }
+
+            currentSign = chr;
+            currentNumber = 0;
         }
-        else {
-            printf("Error: Invalid expression.\n");
-            *errorFlag = 1;
-            return 0;
-        }
     }
 
-    int result = numStack[0];
-    int numIndex = 1;
-    for (int j = 0; j <= opTop; j++) {
-        char op = opStack[j];
-        int num = numStack[numIndex++];
-        if (op == '+') result += num;
-        else if (op == '-') result -= num;
-    }
-
-    return result;
-}
-
-int main() {
-    char expression[MAX_EXPR];
-    int error = 0;
-
-    printf("Enter a mathematical expression (+, -, *, /):\n");
-    fgets(expression, sizeof(expression), stdin);
-    trimNewline(expression);
-
-    int result = evaluateExpression(expression, &error);
-    if (!error) {
-        printf("Result: %d\n", result);
-    }
+    sumOfExpression += lastNumber;
+    printf("%d\n", sumOfExpression);
     return 0;
 }
