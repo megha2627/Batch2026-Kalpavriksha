@@ -31,136 +31,117 @@ Note:
   after any modification.
 */
 
-
-
-
-
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 struct User {
-    int id;
-    char name[50];
-    int age;
+    int userId;
+    char userName[50];
+    int userAge;
 };
 
-// Function to get safe integer input from user
-int getIntegerInput(char message[]) {
+
+int getIntInput(const char *prompt) {
+    char inputBuffer[100];
     int value;
-    char c;
     while (1) {
-        printf("%s", message);
-        if (scanf("%d", &value) == 1) {
-            while ((c = getchar()) != '\n' && c != EOF); // clear buffer
+        printf("%s", prompt);
+        if (fgets(inputBuffer, sizeof(inputBuffer), stdin) == NULL)
+            continue;
+        if (sscanf(inputBuffer, "%d", &value) == 1)
             return value;
-        } else {
-            printf("Invalid input! Please enter a valid number.\n");
-            while ((c = getchar()) != '\n' && c != EOF);
-        }
+        printf("Invalid input! Please enter a valid number.\n");
     }
 }
 
-// Check if User ID already exists
-int isUserIdExists(int userId) {
-    FILE *userFile = fopen("users.txt", "r");
-    if (userFile == NULL) return 0;
+
+int isUserIdExists(int id) {
+    FILE *file = fopen("users.txt", "r");
+    if (!file) return 0;
 
     struct User tempUser;
-    while (fscanf(userFile, "%d %49s %d", &tempUser.id, tempUser.name, &tempUser.age) != EOF) {
-        if (tempUser.id == userId) {
-            fclose(userFile);
+    while (fscanf(file, "%d %49s %d", &tempUser.userId, tempUser.userName, &tempUser.userAge) == 3) {
+        if (tempUser.userId == id) {
+            fclose(file);
             return 1;
         }
     }
-
-    fclose(userFile);
+    fclose(file);
     return 0;
 }
 
-// Add a new user
 void addUser() {
-    FILE *userFile = fopen("users.txt", "a");
-    if (userFile == NULL) {
-        printf("Error: Could not open 'users.txt' for writing.\n");
+    FILE *file = fopen("users.txt", "a");
+    if (!file) {
+        printf("Error: Cannot open 'users.txt' for writing.\n");
         return;
     }
 
     struct User newUser;
     do {
-        newUser.id = getIntegerInput("Enter ID: ");
-        if (isUserIdExists(newUser.id))
-            printf("Error: This ID already exists. Try another.\n");
+        newUser.userId = getIntInput("Enter User ID: ");
+        if (isUserIdExists(newUser.userId))
+            printf("Error: This User ID already exists. Try another.\n");
         else
             break;
     } while (1);
 
-    printf("Enter Name: ");
-    if (scanf("%49s", newUser.name) != 1) {
-        printf("Invalid input for name.\n");
-        fclose(userFile);
-        return;
-    }
-    newUser.age = getIntegerInput("Enter Age: ");
+    printf("Enter User Name: ");
+    fgets(newUser.userName, sizeof(newUser.userName), stdin);
+    newUser.userName[strcspn(newUser.userName, "\n")] = '\0';
 
-    fprintf(userFile, "%d %s %d\n", newUser.id, newUser.name, newUser.age);
-    fclose(userFile);
+    newUser.userAge = getIntInput("Enter User Age: ");
+
+    fprintf(file, "%d %s %d\n", newUser.userId, newUser.userName, newUser.userAge);
+    fclose(file);
     printf("User added successfully.\n");
 }
 
-// Display all users
-void showUsers() {
-    FILE *userFile = fopen("users.txt", "r");
-    if (userFile == NULL) {
-        printf("No data found.\n");
+
+void displayUsers() {
+    FILE *file = fopen("users.txt", "r");
+    if (!file) {
+        printf("No users found.\n");
         return;
     }
 
-    struct User u;
-    printf("\n%-10s %-20s %-5s\n", "ID", "Name", "Age");
-    printf("--------------------------------------\n");
+    struct User user;
+    printf("\n%-10s %-20s %-5s\n", "UserID", "UserName", "Age");
+    printf("-----\n");
 
-    while (fscanf(userFile, "%d %49s %d", &u.id, u.name, &u.age) != EOF) {
-        printf("%-10d %-20s %-5d\n", u.id, u.name, u.age);
+    while (fscanf(file, "%d %49s %d", &user.userId, user.userName, &user.userAge) == 3) {
+        printf("%-10d %-20s %-5d\n", user.userId, user.userName, user.userAge);
     }
-
-    fclose(userFile);
+    fclose(file);
 }
 
-// Update a user by ID
 void updateUser() {
-    int id, found = 0;
-    struct User u;
+    int targetId, found = 0;
+    struct User user;
 
-    FILE *userFile = fopen("users.txt", "r");
+    FILE *file = fopen("users.txt", "r");
     FILE *tempFile = fopen("temp.txt", "w");
-    if (userFile == NULL || tempFile == NULL) {
-        printf("Error: Could not access 'users.txt'. Check file existence and permissions.\n");
+    if (!file || !tempFile) {
+        printf("Error: Cannot access files.\n");
         return;
     }
 
-    id = getIntegerInput("Enter ID to update: ");
+    targetId = getIntInput("Enter User ID to update: ");
 
-    while (fscanf(userFile, "%d %49s %d", &u.id, u.name, &u.age) != EOF) {
-        if (u.id == id) {
+    while (fscanf(file, "%d %49s %d", &user.userId, user.userName, &user.userAge) == 3) {
+        if (user.userId == targetId) {
             found = 1;
-            printf("Enter New Name: ");
-            if (scanf("%49s", u.name) != 1) {
-                printf("Invalid input for name.\n");
-                fclose(userFile);
-                fclose(tempFile);
-                remove("temp.txt");
-                return;
-            }
-            u.age = getIntegerInput("Enter New Age: ");
+            printf("Enter New User Name: ");
+            getchar(); 
+            fgets(user.userName, sizeof(user.userName), stdin);
+            user.userName[strcspn(user.userName, "\n")] = '\0';
+            user.userAge = getIntInput("Enter New User Age: ");
         }
-        fprintf(tempFile, "%d %s %d\n", u.id, u.name, u.age);
+        fprintf(tempFile, "%d %s %d\n", user.userId, user.userName, user.userAge);
     }
 
-    fclose(userFile);
+    fclose(file);
     fclose(tempFile);
 
     if (found) {
@@ -169,33 +150,32 @@ void updateUser() {
         printf("User updated successfully.\n");
     } else {
         remove("temp.txt");
-        printf("ID not found.\n");
+        printf("User ID not found.\n");
     }
 }
 
-// Delete a user by ID
-void deleteUser() {
-    int id, found = 0;
-    struct User u;
 
-    FILE *userFile = fopen("users.txt", "r");
+void deleteUser() {
+    int targetId, found = 0;
+    struct User user;
+
+    FILE *file = fopen("users.txt", "r");
     FILE *tempFile = fopen("temp.txt", "w");
-    if (userFile == NULL || tempFile == NULL) {
-        printf("Error: Could not access 'users.txt'. Check file existence and permissions.\n");
+    if (!file || !tempFile) {
+        printf("Error: Cannot access files.\n");
         return;
     }
 
-    id = getIntegerInput("Enter ID to delete: ");
+    targetId = getIntInput("Enter User ID to delete: ");
 
-    while (fscanf(userFile, "%d %49s %d", &u.id, u.name, &u.age) != EOF) {
-        if (u.id != id) {
-            fprintf(tempFile, "%d %s %d\n", u.id, u.name, u.age);
-        } else {
+    while (fscanf(file, "%d %49s %d", &user.userId, user.userName, &user.userAge) == 3) {
+        if (user.userId != targetId)
+            fprintf(tempFile, "%d %s %d\n", user.userId, user.userName, user.userAge);
+        else
             found = 1;
-        }
     }
 
-    fclose(userFile);
+    fclose(file);
     fclose(tempFile);
 
     if (found) {
@@ -204,42 +184,47 @@ void deleteUser() {
         printf("User deleted successfully.\n");
     } else {
         remove("temp.txt");
-        printf("ID not found.\n");
+        printf("User ID not found.\n");
     }
 }
 
 int main() {
     int choice;
-    char input[20];
+    char inputBuffer[20];
+
     while (1) {
         printf("\nUSER MANAGEMENT MENU\n");
         printf("1. Add User\n");
-        printf("2. Show Users\n");
+        printf("2. Display Users\n");
         printf("3. Update User\n");
         printf("4. Delete User\n");
         printf("5. Exit\n");
-        
 
         printf("Enter your choice: ");
-        if (fgets(input, sizeof(input), stdin) == NULL)
+        if (fgets(inputBuffer, sizeof(inputBuffer), stdin) == NULL)
             continue;
 
-        if (sscanf(input, "%d", &choice) != 1) {
-            printf("Invalid input! Please enter a number between 1–5.\n");
+        if (sscanf(inputBuffer, "%d", &choice) != 1) {
+            printf("Invalid input! Please enter a number between 1-5.\n");
             continue;
         }
 
         switch (choice) {
             case 1: addUser(); break;
-            case 2: showUsers(); break;
+            case 2: displayUsers(); break;
             case 3: updateUser(); break;
             case 4: deleteUser(); break;
-            case 5:
-                printf("Exiting...!\n");
-                exit(0);
-            default:
-                printf("Invalid option. Please try again.\n");
+            case 5: printf("Exiting program...\n"); exit(0);
+            default: printf("Invalid choice. Please try again.\n");
         }
     }
+
     return 0;
 }
+
+
+
+
+
+
+
