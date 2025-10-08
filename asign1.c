@@ -74,14 +74,14 @@ int main() {
     for (int i = 0; i < lengthOfString; i++) {
         unsigned char chr = (unsigned char)stringExpression[i]; 
         if (i == 0 && (chr == '+' || chr == '*' || chr == '/')) {
-            printf("Error: Expression cannot start with operator.\n");
+            printf("Error: Invalid expression \n");
             return 0;
         }
-         if (i == 0 && chr == '-'){
-            currentSign= '-';
+         
+        if (i == 0 && chr == '-') {
+            currentSign = '-';
             continue;
-         }
-       
+        }
 
         if (isdigit(chr)) {
             currentNumber = currentNumber * 10 + (chr - '0');
@@ -90,31 +90,31 @@ int main() {
         if ((!isdigit(chr) && chr != ' ') || i == lengthOfString - 1) {
             if ((prevChar == '+' || prevChar == '-' || prevChar == '*' || prevChar == '/') && 
                 (chr == '+' || chr == '-' || chr == '*' || chr == '/')) {
-                printf("Error: Invalid expression (consecutive operators).\n");
+                printf("Error: Invalid expression.\n");
                 return 0;
             }    
         
 
-            // Update prevChar only if current is operator
+           
             if (chr == '+' || chr == '-' || chr == '*' || chr == '/') {
                 prevChar = chr;
             }
 
 
 
-            // Check invalid characters
+           
             if (chr != '+' && chr != '-' && chr != '*' && chr != '/' && !isdigit(chr) && !isspace(chr)) {
                 printf("Error: Invalid expression.\n");
                 return 0;
             }
 
-            // Expression cannot end with operator
+           
             if (i == lengthOfString - 1 && !isdigit(chr)) {
                 printf("Error: Invalid expression.\n");
                 return 0;
             }
 
-            // Evaluate based on lastNumber and currentSign
+           
             if (currentSign == '+') {
                 sumOfExpression += lastNumber;
                 lastNumber = currentNumber;
