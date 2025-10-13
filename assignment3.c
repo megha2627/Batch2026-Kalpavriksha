@@ -118,6 +118,5 @@ int main(){
     printf("List Of Roll Numbers [via recursion]:");
     printRollNumber(student,n,0);
     printf("\n");
-    printf("---------------------------------------------------------------------------------------------------------------------\n");
     return 0;
 }
