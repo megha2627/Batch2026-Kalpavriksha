@@ -62,12 +62,12 @@ typedef struct studentDetails{
     int subject3Marks;
 } studentDetails;
 
-void printStudentDetails(studentDetails studenti){
-    printf("Roll :%d\n",studenti.rollNumber);
-    printf("Name :%s\n",studenti.studentName);
-    printf("Total :%d\n",studenti.subject1Marks+studenti.subject2Marks+studenti.subject3Marks);
-    printf("Average :%.2f\n",(studenti.subject1Marks+studenti.subject2Marks+studenti.subject3Marks)/3.0);
-    float average=(studenti.subject1Marks+studenti.subject2Marks+studenti.subject3Marks)/3.0;
+void printStudentDetails(studentDetails student){
+    printf("Roll :%d\n",student.rollNumber);
+    printf("Name :%s\n",student.studentName);
+    printf("Total :%d\n",student.subject1Marks+student.subject2Marks+student.subject3Marks);
+    printf("Average :%.2f\n",(student.subject1Marks+student.subject2Marks+student.subject3Marks)/3.0);
+    float average=(student.subject1Marks+student.subject2Marks+student.subject3Marks)/3.0;
     if(average>=85){
         printf("Grade :A\n");
         printf("Performance:*****\n");
@@ -90,33 +90,79 @@ void printStudentDetails(studentDetails studenti){
     }
   
 }
-void printRollNumber(studentDetails student[],int n,int count){
-    if(count==n){
+void printRollNumber(studentDetails student[],int numberOfStudents,int count){
+    if(count==numberOfStudents){
         return;
     }
     printf("%d ",student[count].rollNumber);
-    printRollNumber(student,n,count+1);
+    printRollNumber(student,numberOfStudents,count+1);
 }
 int main(){
     printf("enter the number of students:");
-    int n;
-    scanf("%d",&n);
-    studentDetails student[n];
+    int numberOfStudents;
+    scanf("%d",&numberOfStudents);
+   
+    studentDetails student[numberOfStudents];
+    if (numberOfStudents <= 0 || numberOfStudents > 100) {
+        printf("Invalid number of students! Must be between 1 and 100.\n");
+        return 1;
+    }
 
-    for (int i = 0; i <n;i++){
-        
-        printf("enter the Roll Number,name,subject1Marks,subject2Marks,subject3Marks of students\n");
-        scanf("%d %s %d %d %d",&student[i].rollNumber,student[i].studentName,&student[i].subject1Marks,&student[i].subject2Marks,&student[i].subject3Marks);
+  
+
+    for (int i = 0; i < numberOfStudents; i++) {
+        printf("\nEnter details for student %d:\n", i + 1);
+
+        // Roll Number validation
+        while (1) {
+            int valid = 1;
+            printf("Enter Roll Number: ");
+            scanf("%d", &student[i].rollNumber);
+
+            if (student[i].rollNumber <= 0) {
+                printf("Roll number must be positive. Try again.\n");
+                continue;
+            }
+
+            // Check duplicate roll numbers
+            for (int j = 0; j < i; j++) {
+                if (student[i].rollNumber == student[j].rollNumber) {
+                    printf("Duplicate roll number detected. Enter a unique one.\n");
+                    valid = 0;
+                    break;
+                }
+            }
+            if (valid) break;
+        }
+
+        printf("Enter Name: ");
+        scanf("%s", student[i].studentName);
+
+        // Marks validation
+        while (1) {
+            printf("Enter marks in 3 subjects (0–100): ");
+            scanf("%d %d %d", &student[i].subject1Marks,
+                              &student[i].subject2Marks,
+                              &student[i].subject3Marks);
+
+            if (student[i].subject1Marks < 0 || student[i].subject1Marks > 100 ||
+                student[i].subject2Marks < 0 || student[i].subject2Marks > 100 ||
+                student[i].subject3Marks < 0 || student[i].subject3Marks > 100) {
+                printf("Invalid marks entered! Each subject mark must be between 0 and 100.\n");
+                continue;
+            }
+            break;
+        }
     }
     printf("\n");
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < numberOfStudents; i++)
     {
 
         printStudentDetails(student[i]);
         printf("\n");
     }
     printf("List Of Roll Numbers [via recursion]:");
-    printRollNumber(student,n,0);
+    printRollNumber(student,numberOfStudents,0);
     printf("\n");
     printf("---------------------------------------------------------------------------------------------------------------------\n");
     return 0;
