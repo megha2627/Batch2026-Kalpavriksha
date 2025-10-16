@@ -104,6 +104,7 @@ List of Roll Numbers (via recursion): 1 2 3 ... N*/
 
 
 //Here is the code for student perfromance analyzer 
+#include<ctype.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -158,7 +159,7 @@ void printStudentDetails(studentDetails student) {
 
     
     if (grade == 'F') {
-        printf("Performance: (Skipped due to failing grade)\n");
+        
         return;
     }
 
@@ -190,7 +191,7 @@ int getValidNumberOfStudents() {
     int num;
 
     while (1) {
-        printf("Enter number of students 1–100: ");
+        printf("Enter number of students : ");
         scanf("%s", input);
 
         
@@ -262,29 +263,26 @@ int getValidRollNumber(studentDetails students[], int count) {
         return roll; 
     }
 }
-int getValidName(char name[]) {
+void getValidName(char name[]) {
     char input[50];
     while (1) {
         printf("Enter Name: ");
-        scanf(" %[^\n]", input); 
+        fgets(input, sizeof(input), stdin);
+ 
+        input[strcspn(input, "\n")] = '\0';
 
-        int valid = 1;
-        for (int i = 0; input[i] != '\0'; i++) {
-            if (!isalpha(input[i]) && input[i] != ' ') { 
-                valid = 0; 
-                break; 
-            }
-        }
-
-        if (!valid) {
-            printf("Invalid input! Name must contain only letters and spaces.\n");
+        
+        if (isdigit(input[0]) || input[0] == ' ' || input[0] == '-') {
+            printf("Invalid input! Name cannot start with a digit.\n");
             continue;
         }
 
-        strcpy(name, input); 
-        return 1;
+    
+        strcpy(name, input);
+        return;
     }
 }
+
 
 
 
@@ -293,7 +291,7 @@ int getValidMarks(char subjectName[]) {
     int marks;
 
     while (1) {
-        printf("Enter marks for %s 0–100: ", subjectName);
+        printf("Enter marks for %s: ", subjectName);
         scanf("%s", input);
 
         // Check if input has only digits
@@ -332,10 +330,13 @@ int main() {
     studentDetails students[n];
 
     for (int i = 0; i < n; i++) {
-        printf("\nEnter roll no. for Student %d:\n", i + 1);
+      
         students[i].rollNumber = getValidRollNumber(students, i);
-
+         int c;
+         while ((c = getchar()) != '\n' && c != EOF); // 
         getValidName(students[i].studentName);
+
+       
 
         students[i].subject1Marks = getValidMarks("Subject 1");
         students[i].subject2Marks = getValidMarks("Subject 2");
