@@ -48,7 +48,7 @@ int calculateSize(){
 
 
 //here we are calculate the vlaue of each cell between the range of 0 and 255
-int calculateCellValue(int numberOfRows,int numberOfColumns){
+int calculateCellValue(int row,int column){
     int cellValue = rand() % 256;
     return cellValue;
 }
@@ -56,19 +56,19 @@ int calculateCellValue(int numberOfRows,int numberOfColumns){
 
 //rotating the matrix by 90 degree clockwise
 void rotatingMatrix(int sizeOfArray,int** matrix){
-    for (int numberOfRows = 0; numberOfRows< sizeOfArray;numberOfRows++){
-        for (int numberOfColumns = numberOfRows; numberOfColumns < sizeOfArray;numberOfColumns++){
-            int temp=*(*(matrix+numberOfRows)+numberOfColumns);
-            *(*(matrix+numberOfRows)+numberOfColumns)=*(*(matrix+numberOfColumns)+numberOfRows);
-            *(*(matrix+numberOfColumns)+numberOfRows)=temp;
+    for (int row = 0; row< sizeOfArray;row++){
+        for (int column = row; column < sizeOfArray;column++){
+            int temp=*(*(matrix+row)+column);
+            *(*(matrix+row)+column)=*(*(matrix+column)+row);
+            *(*(matrix+column)+row)=temp;
         }
     }
 
-    for(int numberOfRows = 0; numberOfRows < sizeOfArray;numberOfRows++){
-        for (int numberOfColumns= 0; numberOfColumns < sizeOfArray/2;numberOfColumns++){
-            int temp=*(*(matrix+numberOfRows)+numberOfColumns);
-            *(*(matrix+numberOfRows)+numberOfColumns)=*(*(matrix+numberOfRows)+(sizeOfArray-1-numberOfColumns));
-            *(*(matrix+numberOfRows)+(sizeOfArray-1-numberOfColumns))=temp;
+    for(int row = 0; row < sizeOfArray;row++){
+        for (int column= 0; column < sizeOfArray/2;column++){
+            int temp=*(*(matrix+row)+column);
+            *(*(matrix+row)+column)=*(*(matrix+row)+(sizeOfArray-1-column));
+            *(*(matrix+row)+(sizeOfArray-1-column))=temp;
             
         }
         
@@ -78,27 +78,27 @@ void rotatingMatrix(int sizeOfArray,int** matrix){
 
 
 //applying the 3*3 filter on the rotating matrix
-int filterMatrix(int sizeOfArray,int** matrix,int numberOfRows,int numberOfColumns){
+int filterMatrix(int sizeOfArray,int** matrix,int row,int column){
     int directions[][2]={{-1,-1},{-1,0},{-1,1},
                         {0,-1},{0,0},{0,1},
                         {1,-1},{1,0},{1,1}};
 
-    int sum=0;
+    int sumOfAdjacentNeighbour=0;
     int count=0;
     for (int k = 0; k < 9;k++){
-        int i1 = directions[k][0] + numberOfRows;
-        int i2 = directions[k][1] + numberOfColumns;
+        int modifiedRow = directions[k][0] + row;
+        int modifiedColumn = directions[k][1] + column;
         
-        if(i1<0 || i1>=sizeOfArray || i2<0 || i2>=sizeOfArray){
+        if(modifiedRow<0 || modifiedRow>=sizeOfArray || modifiedColumn<0 || modifiedColumn>=sizeOfArray){
             continue;
         }
         else{
-            sum=sum+*(*(matrix+i1)+i2);
+            sumOfAdjacentNeighbour=sumOfAdjacentNeighbour+*(*(matrix+modifiedRow)+modifiedColumn);
             count++;
         }
     }
    
-    return sum / count;
+    return sumOfAdjacentNeighbour / count;
 }
 
 
@@ -111,22 +111,22 @@ int main(){
     sizeOfArray = calculateSize();
     srand(time(NULL));
     int **matrix = malloc(sizeOfArray * sizeof(int*));
-    for (int numberOfRows = 0; numberOfRows < sizeOfArray; numberOfRows++) {
-        matrix[numberOfRows] = malloc(sizeOfArray * sizeof(int));
+    for (int row = 0; row < sizeOfArray; row++) {
+        matrix[row] = malloc(sizeOfArray * sizeof(int));
     }
-    for (int numberOfRows = 0; numberOfRows < sizeOfArray;numberOfRows++){
-        for (int numberOfColumns = 0; numberOfColumns < sizeOfArray;numberOfColumns++){
+    for (int row = 0; row < sizeOfArray;row++){
+        for (int column = 0; column < sizeOfArray;column++){
             int cellValue;
-            cellValue = calculateCellValue(numberOfRows,numberOfColumns);
-            *(*(matrix+numberOfRows)+numberOfColumns) = cellValue; 
+            cellValue = calculateCellValue(row,column);
+            *(*(matrix+row)+column) = cellValue; 
         }
     }
 
     //now printing the original matrix
     printf("Original Matrix:\n");
-    for (int numberOfRows = 0; numberOfRows < sizeOfArray;numberOfRows++){
-        for (int numberOfColumns = 0; numberOfColumns < sizeOfArray;numberOfColumns++){
-            printf("%d ", *(*(matrix+numberOfRows)+numberOfColumns));
+    for (int row = 0; row < sizeOfArray;row++){
+        for (int column = 0; column < sizeOfArray;column++){
+            printf("%d ", *(*(matrix+row)+column));
         }
         printf("\n");
     }
@@ -138,9 +138,9 @@ int main(){
 
     //now printing the rotated matrix
     printf("Rotated Matrix:\n");
-    for (int numberOfRows = 0; numberOfRows < sizeOfArray;numberOfRows++){
-        for (int numberOfColumns = 0; numberOfColumns < sizeOfArray;numberOfColumns++){
-            printf("%d ", *(*(matrix+numberOfRows)+numberOfColumns));
+    for (int row = 0; row < sizeOfArray;row++){
+        for (int column = 0; column < sizeOfArray;column++){
+            printf("%d ", *(*(matrix+row)+column));
         }
         printf("\n");
     }
@@ -149,10 +149,10 @@ int main(){
 
 
     //now applying the 3*3 filter on the rotating matrix
-     for (int numberOfRows = 0; numberOfRows < sizeOfArray;numberOfRows++){
-        for (int numberOfColumns= 0; numberOfColumns < sizeOfArray;numberOfColumns++){
-            int newValue = filterMatrix(sizeOfArray, matrix, numberOfRows, numberOfColumns); 
-            *(*(matrix+numberOfRows)+numberOfColumns) = newValue; 
+     for (int row = 0; row < sizeOfArray;row++){
+        for (int column= 0; column < sizeOfArray;column++){
+            int newValue = filterMatrix(sizeOfArray, matrix, row, column); 
+            *(*(matrix+row)+column) = newValue; 
            
         }
         
@@ -160,9 +160,9 @@ int main(){
 
     //now printing the final matrix after applying filter
     printf("Final Matrix after applying 3x3 filter:\n");
-    for (int numberOfRows = 0; numberOfRows < sizeOfArray;numberOfRows++){
-        for (int numberOfColumns = 0; numberOfColumns< sizeOfArray;numberOfColumns++){
-            printf("%d ", *(*(matrix+numberOfRows)+numberOfColumns));
+    for (int row = 0; row < sizeOfArray;row++){
+        for (int column = 0; column< sizeOfArray;column++){
+            printf("%d ", *(*(matrix+row)+column));
         }
         printf("\n");
     }
