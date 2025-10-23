@@ -102,6 +102,18 @@ int filterMatrix(int sizeOfArray,int** matrix,int row,int column){
 }
 
 
+//function to print the matrix
+void printMatrix(int ** matrix,int sizeOfArray){
+    for (int row = 0; row < sizeOfArray;row++){
+        for (int column = 0; column< sizeOfArray;column++){
+            printf("%d ", *(*(matrix+row)+column));
+        }
+        printf("\n");
+    }
+}
+    
+
+
 
 
 
@@ -124,12 +136,7 @@ int main(){
 
     //now printing the original matrix
     printf("Original Matrix:\n");
-    for (int row = 0; row < sizeOfArray;row++){
-        for (int column = 0; column < sizeOfArray;column++){
-            printf("%d ", *(*(matrix+row)+column));
-        }
-        printf("\n");
-    }
+    printMatrix(matrix, sizeOfArray);
     printf("\n");
 
     //now rotating the matrix by 90 degree clockwise
@@ -137,16 +144,9 @@ int main(){
      
 
     //now printing the rotated matrix
-    printf("Rotated Matrix:\n");
-    for (int row = 0; row < sizeOfArray;row++){
-        for (int column = 0; column < sizeOfArray;column++){
-            printf("%d ", *(*(matrix+row)+column));
-        }
-        printf("\n");
-    }
-     printf("\n");
-
-
+    printf("Rotated Matrix by 90 degree clockwise:\n");
+    printMatrix(matrix, sizeOfArray);
+    printf("\n");
 
     //now applying the 3*3 filter on the rotating matrix
      for (int row = 0; row < sizeOfArray;row++){
@@ -160,11 +160,6 @@ int main(){
 
     //now printing the final matrix after applying filter
     printf("Final Matrix after applying 3x3 filter:\n");
-    for (int row = 0; row < sizeOfArray;row++){
-        for (int column = 0; column< sizeOfArray;column++){
-            printf("%d ", *(*(matrix+row)+column));
-        }
-        printf("\n");
-    }
+    printMatrix(matrix,sizeOfArray);
 
 }
