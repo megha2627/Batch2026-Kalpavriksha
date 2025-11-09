@@ -366,18 +366,26 @@ void cdCmd(DirectoryCLL **current, char val[]) {
 
 void pwdCmd(DirectoryCLL *current) {
     if (!current) return;
+
     char path[LINE_LEN] = "";
     DirectoryCLL *t = current;
+
     while (t != NULL) {
         char temp[LINE_LEN];
-        if (strcmp(t->name, "/") == 0) snprintf(temp, sizeof(temp), "/%s", path);
-        else snprintf(temp, sizeof(temp), "/%s%s", t->name, path);
-        strncpy(path, temp, sizeof(path)-1);
-        path[sizeof(path)-1] = '\0';
-        t = t->parent;
-        if (t == t->parent) break;
+        if (strcmp(t->name, "/") == 0)
+            snprintf(temp, sizeof(temp), "/%s", path);
+        else
+            snprintf(temp, sizeof(temp), "/%s%s", t->name, path);
+
+        strncpy(path, temp, sizeof(path) - 1);
+        path[sizeof(path) - 1] = '\0';
+
+        t = t->parent;  // safe upward traversal
     }
-    if (strlen(path) == 0) strcpy(path, "/");
+
+    if (strlen(path) == 0)
+        strcpy(path, "/");
+
     printf("%s\n", path);
 }
 
