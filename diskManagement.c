@@ -5,9 +5,11 @@
 
 
 #define BLOCK_SIZE 512
-#define NUM_BLOCKS 5000
+//#define NUM_BLOCKS 5000
 #define MAX_BLOCKS_PER_FILE 100
 #define NAME_LEN 50
+int NUM_BLOCKS; 
+
 #define LINE_LEN 2048
 
 
@@ -425,6 +427,8 @@ void freeVirtualDisk() {
 
 
 int main() {
+    NUM_BLOCKS = getNumberOfBlocks();
+
     virtualDisk = malloc((size_t)NUM_BLOCKS * BLOCK_SIZE);
     if (!virtualDisk) { perror("virtualDisk malloc"); return 1; }
     initFreeList();
