@@ -5,10 +5,10 @@
 
 
 #define BLOCK_SIZE 512
-//#define NUM_BLOCKS 5000
-#define MAX_BLOCKS_PER_FILE 100
-#define NAME_LEN 50
-int NUM_BLOCKS; 
+//#define numBlocks 5000
+#define MAX_BLOCK_PER_FILE 100
+#define NAME_LENGTH 50
+int numBlocks; 
 
 #define LINE_LEN 2048
 
@@ -88,31 +88,31 @@ int isValidFileName(char name[]) {
 
 
 
-typedef struct FreeBlockManagement {
+typedef struct freeBlockManagement {
     int index;
-    struct FreeBlockManagement *next;
-    struct FreeBlockManagement *prev;
-} FreeBlockDLL;
+    struct freeBlockManagement *next;
+    struct freeBlockManagement *prev;
+} freeBlockDLL;
 
-typedef struct DirectoriesManagement {
+typedef struct directoriesManagement{
     int isDirectory;
-    char name[NAME_LEN];
-    int blockPointers[MAX_BLOCKS_PER_FILE];
+    char name[NAME_LENGTH];
+    int blockPointers[MAX_BLOCK_PER_FILE];
     int blockCount;
     int contentSize;
-    struct DirectoriesManagement *parent;
-    struct DirectoriesManagement *child;
-    struct DirectoriesManagement *prev;
-    struct DirectoriesManagement *next;
-} DirectoryCLL;
+    struct directoriesManagement*parent;
+    struct directoriesManagement*child;
+    struct directoriesManagement*prev;
+    struct directoriesManagement*next;
+} directoryCLL;
 
-FreeBlockDLL *freeHead = NULL;
-FreeBlockDLL *freeTail = NULL;
+freeBlockDLL *freeHead = NULL;
+freeBlockDLL *freeTail = NULL;
 int freeCount = 0;
 char *virtualDisk = NULL;
 
-FreeBlockDLL *createFreeNode(int idx) {
-    FreeBlockDLL *n = malloc(sizeof(FreeBlockDLL));
+freeBlockDLL *createFreeNode(int idx) {
+    freeBlockDLL *n = malloc(sizeof(freeBlockDLL));
     if (!n) { perror("malloc"); exit(1); }
     n->index = idx;
     n->next = n->prev = NULL;
@@ -123,8 +123,8 @@ void initFreeList() {
     freeHead = createFreeNode(1);
     freeTail = freeHead;
     freeCount = 1;
-    for (int i = 2; i <= NUM_BLOCKS; ++i) {
-        FreeBlockDLL *n = createFreeNode(i);
+    for (int i = 2; i <= numBlocks; ++i) {
+        freeBlockDLL *n = createFreeNode(i);
         freeTail->next = n;
         n->prev = freeTail;
         freeTail = n;
@@ -133,19 +133,27 @@ void initFreeList() {
 }
 
 int popFreeBlock() {
-    if (!freeHead) return -1;
+    if (!freeHead) {
+        fprintf(stderr, "Error: No free blocks available on disk.\n");
+        return -1;
+    }
+
     int idx = freeHead->index;
-    FreeBlockDLL *tmp = freeHead;
+    freeBlockDLL *tmp = freeHead;
     freeHead = freeHead->next;
-    if (freeHead) freeHead->prev = NULL;
-    else freeTail = NULL;
+    if (freeHead)
+        freeHead->prev = NULL;
+    else
+        freeTail = NULL;
+
     free(tmp);
     freeCount--;
     return idx;
 }
 
+
 void pushFreeBlock(int idx) {
-    FreeBlockDLL *n = createFreeNode(idx);
+    freeBlockDLL *n = createFreeNode(idx);
     if (!freeTail) {
         freeHead = freeTail = n;
     } else {
@@ -156,13 +164,13 @@ void pushFreeBlock(int idx) {
     freeCount++;
 }
 
-DirectoryCLL* CreateDirectoryOrFile(char val[], int isDir) {
-    DirectoryCLL* node = (DirectoryCLL*)malloc(sizeof(DirectoryCLL));
+directoryCLL* createDirectoryOrFile(char val[], int isDir) {
+    directoryCLL* node = (directoryCLL*)malloc(sizeof(directoryCLL));
     strcpy(node->name, val);
     node->isDirectory = isDir;
     node->blockCount = 0;
     node->contentSize = 0;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < MAX_BLOCK_PER_FILE; i++) {
         node->blockPointers[i] = -1;
     }
     node->parent = NULL;
@@ -173,10 +181,10 @@ DirectoryCLL* CreateDirectoryOrFile(char val[], int isDir) {
 }
 
 
-DirectoryCLL *findChild(DirectoryCLL *current, const char *name) {
+directoryCLL *findChild(directoryCLL *current, const char *name) {
     if (!current || !current->child) return NULL;
-    DirectoryCLL *head = current->child;
-    DirectoryCLL *t = head;
+    directoryCLL *head = current->child;
+    directoryCLL *t = head;
     do {
         if (strcmp(t->name, name) == 0) return t;
         t = t->next;
@@ -184,13 +192,13 @@ DirectoryCLL *findChild(DirectoryCLL *current, const char *name) {
     return NULL;
 }
 
-void insertChild(DirectoryCLL *current, DirectoryCLL *node) {
+void insertChild(directoryCLL *current, directoryCLL *node) {
     if (!current->child) {
         current->child = node;
         node->next = node->prev = node;
     } else {
-        DirectoryCLL *head = current->child;
-        DirectoryCLL *tail = head->prev;
+        directoryCLL *head = current->child;
+        directoryCLL *tail = head->prev;
         tail->next = node;
         node->prev = tail;
         node->next = head;
@@ -199,10 +207,10 @@ void insertChild(DirectoryCLL *current, DirectoryCLL *node) {
     node->parent = current;
 }
 
-void removeChildNode(DirectoryCLL *node) {
-    DirectoryCLL *parent = node->parent;
+void removeChildNode(directoryCLL *node) {
+    directoryCLL *parent = node->parent;
     if (!parent) return;
-    DirectoryCLL *head = parent->child;
+    directoryCLL *head = parent->child;
     if (!head) return;
     if (node->next == node) {
         parent->child = NULL;
@@ -215,11 +223,11 @@ void removeChildNode(DirectoryCLL *node) {
 }
 
 char *blockPtr(int blockIndex) {
-    if (blockIndex < 1 || blockIndex > NUM_BLOCKS) return NULL;
+    if (blockIndex < 1 || blockIndex > numBlocks) return NULL;
     return virtualDisk + (size_t)(blockIndex - 1) * BLOCK_SIZE;
 }
 
-void mkdirCmd(DirectoryCLL **current, char val[]) {
+void mkdirCmd(directoryCLL **current, char val[]) {
     if (strlen(val) == 0) { printf("mkdir: missing name\n"); return; }
     if (findChild(*current, val)) { printf("Name already exists in current directory.\n"); return; }
    if (!isValidDirName(val)) {
@@ -227,12 +235,12 @@ void mkdirCmd(DirectoryCLL **current, char val[]) {
     return;
 }
 
-    DirectoryCLL *newDir = CreateDirectoryOrFile(val, 1);
+    directoryCLL *newDir = createDirectoryOrFile(val, 1);
     insertChild(*current, newDir);
     printf("Directory '%s' created inside '%s'.\n", val, (*current)->name);
 }
 
-void createCmd(DirectoryCLL **current, char val[]) {
+void createCmd(directoryCLL **current, char val[]) {
     if (strlen(val) == 0) { printf("create: missing name\n"); return; }
     if (findChild(*current, val)) { printf("Name already exists in current directory.\n"); return; }
    if (!isValidFileName(val)) {
@@ -240,14 +248,14 @@ void createCmd(DirectoryCLL **current, char val[]) {
     return;
 }
 
-    DirectoryCLL *newFile = CreateDirectoryOrFile(val, 0);
+    directoryCLL *newFile = createDirectoryOrFile(val, 0);
     insertChild(*current, newFile);
     printf("File '%s' created successfully inside '%s'.\n", val, (*current)->name);
 }
 
-void writeCmd(DirectoryCLL *current, char val[], char content[]) {
+void writeCmd(directoryCLL *current, char val[], char content[]) {
     if (!current) return;
-    DirectoryCLL *file = findChild(current, val);
+    directoryCLL *file = findChild(current, val);
     if (!file || file->isDirectory) { 
         printf("File not found: %s\n", val); 
         return; 
@@ -275,7 +283,7 @@ void writeCmd(DirectoryCLL *current, char val[], char content[]) {
     file->contentSize = 0;
     
     int written = 0;
-    while (written < len && file->blockCount < MAX_BLOCKS_PER_FILE) {
+    while (written < len && file->blockCount < MAX_BLOCK_PER_FILE) {
         if (freeHead == NULL) {
             printf("Disk full. Could not write all data.\n");
             break;
@@ -299,9 +307,9 @@ void writeCmd(DirectoryCLL *current, char val[], char content[]) {
     printf("Data written successfully (size=%d bytes) to '%s'.\n", written, val);
 }
 
-void readCmd(DirectoryCLL *current, char val[]) {
+void readCmd(directoryCLL *current, char val[]) {
     if (!current) return;
-    DirectoryCLL *file = findChild(current, val);
+    directoryCLL *file = findChild(current, val);
     if (!file || file->isDirectory) { printf("File not found: %s\n", val); return; }
     if (file->blockCount == 0 || file->contentSize == 0) { printf("(empty)\n"); return; }
     int remaining = file->contentSize;
@@ -315,9 +323,9 @@ void readCmd(DirectoryCLL *current, char val[]) {
     printf("\n");
 }
 
-void deleteCmd(DirectoryCLL **current, char val[]) {
+void deleteCmd(directoryCLL **current, char val[]) {
     if (!current || !(*current)) return;
-    DirectoryCLL *file = findChild(*current, val);
+    directoryCLL *file = findChild(*current, val);
     if (!file || file->isDirectory) { printf("File not found: %s\n", val); return; }
     for (int i = 0; i < file->blockCount; ++i) pushFreeBlock(file->blockPointers[i]);
     removeChildNode(file);
@@ -325,9 +333,9 @@ void deleteCmd(DirectoryCLL **current, char val[]) {
     printf("File '%s' deleted successfully.\n", val);
 }
 
-void rmdirCmd(DirectoryCLL **current, char val[]) {
+void rmdirCmd(directoryCLL **current, char val[]) {
     if (!current || !(*current)) return;
-    DirectoryCLL *dir = findChild(*current, val);
+    directoryCLL *dir = findChild(*current, val);
     if (!dir || !dir->isDirectory) { printf("Directory not found: %s\n", val); return; }
     if (dir->child != NULL) { printf("Directory not empty. Remove files first.\n"); return; }
     removeChildNode(dir);
@@ -335,11 +343,11 @@ void rmdirCmd(DirectoryCLL **current, char val[]) {
     printf("Directory '%s' removed successfully.\n", val);
 }
 
-void lsCmd(DirectoryCLL *current) {
+void lsCmd(directoryCLL *current) {
     if (!current) return;
     if (current->child == NULL) { printf("(empty)\n"); return; }
-    DirectoryCLL *head = current->child;
-    DirectoryCLL *t = head;
+    directoryCLL *head = current->child;
+    directoryCLL *t = head;
     do {
         if (t->isDirectory) printf("%s/\n", t->name);
         else printf("%s\n", t->name);
@@ -347,7 +355,7 @@ void lsCmd(DirectoryCLL *current) {
     } while (t != head);
 }
 
-void cdCmd(DirectoryCLL **current, char val[]) {
+void cdCmd(directoryCLL **current, char val[]) {
     if (!current || !(*current)) return;
     if (strcmp(val, "..") == 0) {
         if ((*current)->parent != NULL) {
@@ -358,17 +366,17 @@ void cdCmd(DirectoryCLL **current, char val[]) {
         }
         return;
     }
-    DirectoryCLL *d = findChild(*current, val);
+    directoryCLL *d = findChild(*current, val);
     if (!d || !d->isDirectory) { printf("Directory not found: %s\n", val); return; }
     *current = d;
     printf("Moved to %s\n", d->name);
 }
 
-void pwdCmd(DirectoryCLL *current) {
+void pwdCmd(directoryCLL *current) {
     if (!current) return;
 
     char path[LINE_LEN] = "";
-    DirectoryCLL *t = current;
+    directoryCLL *t = current;
 
     while (t != NULL) {
         char temp[LINE_LEN];
@@ -390,21 +398,21 @@ void pwdCmd(DirectoryCLL *current) {
 }
 
 void dfCmd() {
-    int total = NUM_BLOCKS;
+    int total = numBlocks;
     int freeb = freeCount;
     int used = total - freeb;
     double usage = (double)used / (double)total * 100.0;
     printf("Total Blocks: %d\nUsed Blocks: %d\nFree Blocks: %d\nDisk Usage: %.2f%%\n", total, used, freeb, usage);
 }
 
-void freeDirectoryTree(DirectoryCLL *dir) {
+void freeDirectoryTree(directoryCLL *dir) {
     if (!dir) return;
 
-    DirectoryCLL *child = dir->child;
+    directoryCLL *child = dir->child;
     if (child) {
-        DirectoryCLL *start = child;
+        directoryCLL *start = child;
         do {
-            DirectoryCLL *next = child->next;
+            directoryCLL *next = child->next;
             child->next = child->prev = child->parent = NULL;
             freeDirectoryTree(child);
             child = next;
@@ -415,9 +423,9 @@ void freeDirectoryTree(DirectoryCLL *dir) {
 }
 
 void freeFreeBlockList() {
-    FreeBlockDLL *f = freeHead;
+    freeBlockDLL *f = freeHead;
     while (f) {
-        FreeBlockDLL *nx = f->next;
+        freeBlockDLL *nx = f->next;
         free(f);
         f = nx;
     }
@@ -435,17 +443,31 @@ void freeVirtualDisk() {
 
 
 int main() {
-    NUM_BLOCKS = getNumberOfBlocks();
+    numBlocks = getNumberOfBlocks();
 
-    virtualDisk = malloc((size_t)NUM_BLOCKS * BLOCK_SIZE);
+    virtualDisk = malloc((size_t)numBlocks * BLOCK_SIZE);
     if (!virtualDisk) { perror("virtualDisk malloc"); return 1; }
     initFreeList();
-    DirectoryCLL *root = CreateDirectoryOrFile("/", 1);
+    directoryCLL *root = createDirectoryOrFile("/", 1);
     root->parent = NULL;
-    DirectoryCLL *current = root;
+    directoryCLL *current = root;
     char line[LINE_LEN], cmd[64], arg1[128], arg2[1536];
     printf("Compact VFS - ready. Type 'exit' to quit.\n");
+    printf("Available commands:\n");
+    printf("  mkdir <dirname>      : Create a new directory\n");
+    printf("  create <filename>    : Create a new file\n");
+    printf("  write <file> <text>  : Write content to a file\n");
+    printf("  read <file>          : Read content of a file\n");
+    printf("  delete <file>        : Delete a file\n");
+    printf("  rmdir <dirname>      : Remove an empty directory\n");
+    printf("  ls                   : List files and directories in current dir\n");
+    printf("  cd <dirname>         : Change directory\n");
+    printf("  cd ..                : Go to parent directory\n");
+    printf("  pwd                  : Show current path\n");
+    printf("  df                   : Show disk usage\n");
+    printf("  exit                 : Quit the program\n");
     while (1) {
+        
         printf("%s > ", current->name);
         if (!fgets(line, sizeof(line), stdin)) break;
         line[strcspn(line, "\n")] = '\0';
