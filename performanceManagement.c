@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include<ctype.h>
-
+int teamIDCounter = 10;
 
 int getValidChoice() {
     char input[50];
@@ -130,19 +130,17 @@ void getValidTeamName(char *dest) {
     
     while (1) {
 
-        // clear leftover newline from previous scanf
         
        
 
         printf("Enter Team Name:\n ");
         fgets(input, sizeof(input), stdin);
 
-        // Remove newline
         input[strcspn(input, "\n")] = '\0';
 
         int valid = 1;
 
-        // Character validation
+        
         for (int i = 0; input[i] != '\0'; i++) {
             if (!isalpha(input[i])) {
                 printf("Invalid team name! Only alphabets, spaces, and '-' allowed.\n");
@@ -157,7 +155,7 @@ void getValidTeamName(char *dest) {
             
         }
 
-        // Length validation (FIXED)
+        
         int len = strlen(input);
         if (len < 1 || len > 20) {
             printf("Team name must be 1 to 20 characters long.\n");
@@ -179,7 +177,7 @@ float getValidFloat(char message[]) {
         printf("%s", message);
         fgets(input, sizeof(input), stdin);
 
-        input[strcspn(input, "\n")] = '\0';  // remove newline
+        input[strcspn(input, "\n")] = '\0'; 
 
         char *endptr;
         value = strtof(input, &endptr);
@@ -233,7 +231,7 @@ void getValidRoleChoice(char role[]) {
         printf("Enter Role (1-Batsman, 2-Bowler, 3-All-rounder):\n ");
         fgets(input, sizeof(input), stdin);
 
-        // Remove newline
+        
         input[strcspn(input, "\n")] = '\0';
 
         int valid = 1;
@@ -311,7 +309,7 @@ int getValidTeamID() {
         printf("Enter Team ID: ");
         if(!fgets(input, sizeof(input), stdin)) continue;
 
-        input[strcspn(input, "\n")] = '\0';  // remove newline
+        input[strcspn(input, "\n")] = '\0';  
 
         int valid = 1;
         for(int i=0; input[i]!='\0'; i++){
@@ -437,7 +435,7 @@ team* initializeTeamList(Player *playerHead) {
             if (strcmp(search->teamName, temp->teamName) == 0) {
                 found = 1;
                 search->totalPlayers++;
-                search->averageBattingStrikeRate += temp->strikeRate;  // Add up for average
+                search->averageBattingStrikeRate += temp->strikeRate;  
                 break;
             }
             search = search->next;
@@ -489,7 +487,7 @@ void displayPlayersOfTeamByID(Player *playerHead, team *teamHead, int teamID) {
     }
 
    
-    printf("\nChoice 2 → Display All Players of a Specific Team\n");
+    printf("\nChoice 2  Display All Players of a Specific Team\n");
     printf("Enter Team ID: %d\n", teamID);
     printf("Players of Team %s:\n", teamName);
     printf("====================================================================================\n");
@@ -535,7 +533,7 @@ void displayPlayersOfTeamByID(Player *playerHead, team *teamHead, int teamID) {
 Player* addPlayerToTeam(Player *playerHead, team **teamHead) {
     Player *newPlayer = (Player *)malloc(sizeof(Player));
 
-    //printf("\nEnter Player ID: ");
+    
     newPlayer->playerID = getValidPlayerID();
    
     
@@ -587,9 +585,9 @@ Player* addPlayerToTeam(Player *playerHead, team **teamHead) {
             ((foundTeam->averageBattingStrikeRate * (foundTeam->totalPlayers - 1)) + newPlayer->strikeRate) /
             foundTeam->totalPlayers;
     } else {
+       teamIDCounter++;
        
-        static int teamIDCounter = 100;
-        team *newTeam = createTeamNode(teamIDCounter++, newPlayer->teamName, 1, newPlayer->strikeRate);
+        team *newTeam = createTeamNode(teamIDCounter, newPlayer->teamName, 1, newPlayer->strikeRate);
 
         newTeam->next = *teamHead;
         *teamHead = newTeam;
@@ -622,7 +620,7 @@ void displayTeamsByAverageStrikeRate(team *teamHead) {
     for (team *i = sortedList; i != NULL; i = i->next) {
         for (team *j = i->next; j != NULL; j = j->next) {
             if (j->averageBattingStrikeRate > i->averageBattingStrikeRate) {
-                // Swap all data fields
+               
                 int tempID = i->teamID;
                 char tempName[50];
                 strcpy(tempName, i->teamName);
@@ -726,25 +724,29 @@ void displayTopKPlayersByRole(Player *playerHead, team *teamHead) {
     if (K > count) K = count;
 
     
-    printf("\nTop %d %ss of Team %s:\n", K, roleChoice, teamName);
-    printf("====================================================================================\n");
-    printf("ID\tName\t\tRole\t\tRuns\tAvg\tSR\tWkts\tER\tPerf.Index\n");
-    printf("====================================================================================\n");
+    printf("\nTop %d   %ss   of Team  %s:\n", K, roleChoice, teamName);
+    
+    printf("ID\t%-25s %-15s Runs\tAvg\tSR\tWkts\tER\tPerf.Index\n", "Name", "Role");
+
+    printf("============================================================================================================================\n");
+
 
     for (int i = 0; i < K; i++) {
         Player *p = filtered[i];
-        printf("%d\t%-15s%-15s%d\t%.1f\t%.1f\t%d\t%.1f\t%.2f\n",
-               p->playerID,
-               p->name,
-               p->role,
-               p->totalRuns,
-               p->battingAverage,
-               p->strikeRate,
-               p->wicketsTaken,
-               p->economyRate,
-               p->performanceIndex);
+        printf("%d\t%-25s %-15s %d\t%.1f\t%.1f\t%d\t%.1f\t%.2f\n",
+       p->playerID,
+       p->name,
+       p->role,
+       p->totalRuns,
+       p->battingAverage,
+       p->strikeRate,
+       p->wicketsTaken,
+       p->economyRate,
+       p->performanceIndex);
+
     }
-    printf("====================================================================================\n");
+    printf("============================================================================================================================\n");
+
 }
 
 
@@ -758,10 +760,12 @@ void displayPlayersByRoleAcrossTeams(Player *playerHead) {
     getValidRoleChoice(selectedRole);
     
 
-    printf("\nAll %ss of all teams:\n", selectedRole);
-    printf("==========================================================================================================\n");
-    printf("ID\tName\t\tTeam\t\tRole\t\tRuns\tAvg\tSR\tWkts\tER\tPerf.Index\n");
-    printf("==========================================================================================================\n");
+   printf("\nAll %ss of all teams:\n", selectedRole);
+    printf("============================================================================================================================\n");
+    printf("ID\t%-25s %-20s %-15s %-8s %-8s %-8s %-8s %-8s %s\n",
+       "Name", "Team", "Role", "Runs", "Avg", "SR", "Wkts", "ER", "Perf.Index");
+    printf("============================================================================================================================\n");
+
 
     
     Player *temp = playerHead;
@@ -769,23 +773,27 @@ void displayPlayersByRoleAcrossTeams(Player *playerHead) {
 
     while (temp != NULL) {
         if (strcmp(temp->role, selectedRole) == 0) {
-            printf("%d\t%-15s%-15s%-15s%d\t%.1f\t%.1f\t%d\t%.1f\t%.2f\n",
-                   temp->playerID,
-                   temp->name,
-                   temp->teamName,
-                   temp->role,
-                   temp->totalRuns,
-                   temp->battingAverage,
-                   temp->strikeRate,
-                   temp->wicketsTaken,
-                   temp->economyRate,
-                   temp->performanceIndex);
+        printf("%-5d %-25s %-20s %-15s %-8d %-8.1f %-8.1f %-8d %-8.1f %.2f\n",
+       temp->playerID,
+       temp->name,
+       temp->teamName,
+       temp->role,
+       temp->totalRuns,
+       temp->battingAverage,
+       temp->strikeRate,
+       temp->wicketsTaken,
+       temp->economyRate,
+       temp->performanceIndex);
+
             count++;
         }
         temp = temp->next;
     }
+    printf("============================================================================================================================\n");
 
-    printf("======================================================================================\n");
+
+
+    
 
     if (count == 0)
         printf("No players found for role: %s\n", selectedRole);
@@ -862,4 +870,3 @@ int main(){
 
 
 
-//gcc performanceManagement.c -o one
