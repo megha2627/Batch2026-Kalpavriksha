@@ -8,6 +8,7 @@ int capacity;
 int validSize() {
     while(1) {
         char size[10];
+        printf("Enter cache size (1-1000): ");
         fgets(size, sizeof(size), stdin);
         for(int i = 0; size[i] != '\0'; i++) {
             if(size[i] == '\n') {
@@ -15,19 +16,63 @@ int validSize() {
                 break;
             }
         }
-        int ok = 1;
+        int valid = 1;
         for(int i = 0; size[i] != '\0'; i++) {
-            if(!isdigit(size[i])) ok = 0;
+            if(!isdigit(size[i])) valid = 0;
         }
-        if(!ok) continue;
+        if(!valid){
+            printf("Invalid size. Please try again.\n");
+            continue;
+        }
+       
         int v = atoi(size);
-        if(v > 0 && v <= 1000) return v;
+        if(v > 0 && v <= 1000) {
+            return v;
+        }
+        else{
+            printf("Invalid size. Please try again.\n");
+            continue;
+        }
+         
+    }
+}
+
+int validChoice() {
+    while(1) {
+        char choice[10];
+        printf("Enter the valid choice: ");
+        fgets(choice, sizeof(choice), stdin);
+        for(int i = 0; choice[i] != '\0'; i++) {
+            if(choice[i] == '\n') {
+                choice[i] = '\0';
+                break;
+            }
+        }
+        int valid = 1;
+        for(int i = 0; choice[i] != '\0'; i++) {
+            if(!isdigit(choice[i])) valid = 0;
+        }
+        if(!valid){
+            printf("Invalid choice. Please try again.\n");
+            continue;
+        }
+       
+        int v = atoi(choice);
+        if(v > 0 && v <= 5) {
+            return v;
+        }
+        else{
+            printf("Invalid choice. Please try again.\n");
+            continue;
+        }
+         
     }
 }
 
 int validKey() {
     while(1) {
         char key[50];
+        printf("Enter key (non-negative integer): ");
         fgets(key, sizeof(key), stdin);
         for(int i = 0; key[i] != '\0'; i++) {
             if(key[i] == '\n') {
@@ -35,19 +80,34 @@ int validKey() {
                 break;
             }
         }
-        int ok = 1;
+        int valid = 1;
         for(int i = 0; key[i] != '\0'; i++) {
-            if(!isdigit(key[i])) ok = 0;
+            if(!isdigit(key[i])){
+                valid = 0;
+                break;
+
+            } 
         }
-        if(!ok) continue;
+        if(!valid){
+            printf("Invalid key. Please try again.\n");
+            continue;
+        } 
         int v = atoi(key);
-        if(v >= 0) return v;
+        if(v >= 0){
+            return v;
+        } 
+        else{
+            printf("Invalid key. Please try again.\n");
+            continue;
+        }
+         
     }
 }
 
 void validValue(char value[]) {
     while(1) {
         char input[100];
+        printf("Enter value (non-empty string up to 100 chars): ");
         fgets(input, sizeof(input), stdin);
         for(int i = 0; input[i] != '\0'; i++) {
             if(input[i] == '\n') {
@@ -55,11 +115,24 @@ void validValue(char value[]) {
                 break;
             }
         }
+        if(input[0] == '-') {
+            printf("Invalid value. Please try again.\n");
+            continue;
+        }
+        if(isdigit(input[0])) {
+            printf("Invalid value. Please try again.\n");
+            continue;
+        }
         int len = strlen(input);
         if(len > 0 && len <= 100) {
             strcpy(value, input);
             return;
         }
+        else{
+            printf("Invalid value. Please try again.\n");
+            continue;
+        }
+        
     }
 }
 
@@ -147,6 +220,7 @@ void put(LRUCache* cache, int key, char value[]) {
     n->hashNext = cache->bucket[idx];
     cache->bucket[idx] = n;
     cache->total++;
+    printf("Inserted (%d,%s)\n", key, value);
 }
 
 char* get(LRUCache* cache, int key) {
@@ -155,17 +229,23 @@ char* get(LRUCache* cache, int key) {
     while(t) {
         if(t->key == key) {
             moveToFront(cache, t);
+            printf("the value of the key is: ");
             return t->value;
         }
         t = t->hashNext;
     }
-    return NULL;
+    return "key is not present";
 }
 
 void display(LRUCache* cache) {
     Node* t = cache->head;
+    if(t == NULL) {
+        printf("Cache is empty\n");
+        return;
+    }
     while(t) {
-        printf("(%d,%s) ", t->key, t->value);
+        printf("The key and value pair is:(%d,%s) ", t->key, t->value);
+        printf("\n");
         t = t->next;
     }
     printf("\n");
@@ -176,8 +256,10 @@ int main() {
     LRUCache cache;
     initCache(&cache);
     while(1) {
-        int c;
-        scanf("%d", &c);
+        
+        printf("1. Put\n2. Get\n3. Display\n4. Exit\nEnter your choice: ");
+        int c = validChoice();
+       
         getchar();
         if(c == 1) {
             int k = validKey();
@@ -192,6 +274,7 @@ int main() {
         } else if(c == 3) {
             display(&cache);
         } else if(c == 4) {
+            printf("Exiting the program\n");
             exit(0);
         }
     }
