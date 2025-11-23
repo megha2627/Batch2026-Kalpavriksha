@@ -257,10 +257,10 @@ int main() {
     initCache(&cache);
     while(1) {
         
-        printf("1. Put\n2. Get\n3. Display\n4. Exit\nEnter your choice: ");
+        printf("1. Put\n2. Get\n3. Display\n4. Exit\n ");
         int c = validChoice();
        
-        getchar();
+        
         if(c == 1) {
             int k = validKey();
             char v[100];
